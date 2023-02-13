@@ -184,4 +184,4 @@ resource "null_resource" "ansible" {
 
 
 
-# terraform -chdir="/home/vbif/08-final-project/.infra/terraform" import aws_route53_record.www ZCOKAAJ9UMS0T_vbif87atmailru.devops.rebrain.srwx.net_A
+# terraform -chdir="./.infra/terraform" import aws_route53_record.www ID_DOMAIN_TYPE_RECORD
