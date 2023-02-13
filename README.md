@@ -31,7 +31,7 @@
 - HDD: 30GB
 
 ### Схема размещения компонент
-![Схема размещения компонент](/path/to/component_schema.png "Схема размещения компонент").
+![Схема размещения компонент](https://github.com/vbif87vbif/sample_project_with_iac_cicd/blob/main/docs/component_schema.png?raw=true "Схема размещения компонент").
 
 ### Схема линковки web-адресов
-![Схема линковки web-адресов](/path/to/web.png "Схема линковки web-адресов").
+![Схема линковки web-адресов](https://github.com/vbif87vbif/sample_project_with_iac_cicd/blob/main/docs/web.png?raw=true "Схема линковки web-адресов").
