@@ -1,0 +1,6 @@
+---
+elastic_repo_url: https://mirror.yandex.ru/mirrors/elastic/8/
+elastic_reset_pass_util: ./usr/share/elasticsearch/bin/elasticsearch-reset-password
+elastisearch_user: elastic
+java_xms: -Xms1g
+java_xmx: -Xmx1g

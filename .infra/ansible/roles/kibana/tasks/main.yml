@@ -1,0 +1,42 @@
+---
+- name: Add kibana apt repository
+  apt_repository:
+    repo: "deb [trusted=yes] {{ elastic_repo_url }} stable main"
+    state: present
+    update_cache: yes
+
+- name: Install kibana
+  apt:
+    name: "kibana"
+    state: present
+    force: true
+    update_cache: yes
+
+- name: "Reset kibana_system passwd"
+  shell:
+    cmd: /bin/bash -c "/usr/share/elasticsearch/bin/elasticsearch-reset-password -b -u {{ kibana_user }}"
+  register: reset_cmd
+
+- name: change password for kibana
+  uri:
+    url: http://localhost:9200/_security/user/{{ kibana_user }}/_password
+    user: elastic
+    password: "{{ vault_elasticsearch_password }}"
+    method: POST
+    body: "{{ lookup('template','newpassword.j2') }}"
+    body_format: json
+    force_basic_auth: yes
+    status_code: 200
+
+- name: Configure kibana.yml
+  template:
+    src: ./templates/etc/kibana/kibana.yml.j2
+    dest: "/etc/kibana/kibana.yml"
+
+- name: enable kibana  
+  shell: systemctl enable kibana
+
+- name: restart_kibana
+  service:
+    name: kibana
+    state: restarted

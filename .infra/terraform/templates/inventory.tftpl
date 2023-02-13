@@ -1,0 +1,14 @@
+webservers:
+  hosts:
+    ${host_name}:
+      ansible_host: ${host_ip}
+      virtual_domain: ${domain_name}
+      port: ${web_port}
+      secure_port: ${web_secure_port}
+  vars:
+    ansible_ssh_user: ${ansible_user}
+    ansible_ssh_private_key_file: ${private_ssh_key_path}
+    ansible_python_interpreter: /usr/bin/python3
+    enable_ssl: ${enable_ssl}
+    pub_ssh_key_cicd: "${pub_ssh_key_cicd}"
+    pub_ssh_key_app: "${pub_ssh_key_app}"

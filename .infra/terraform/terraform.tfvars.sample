@@ -1,0 +1,32 @@
+cloud_provider = {
+            "token" = ""
+            "cloud_id" = ""
+            "folder_id" = ""
+            "zone" = ""
+        }
+user_info = {
+            "username1" = "admin"
+            "username2" = "cicd"
+            "username3" = "app"
+            "username4" = "gitlab-runner"
+        }
+vm_param = {
+            "core_cnt" = "2"
+            "mem_cnt" = "6"
+            "cpu_util_pct" = "20"
+            "vm_name" = "vm-app-1"
+            "os_image_id" = "fd8c3dv7t6prd7j4n162" #ubuntu 18.04 LTS https://cloud.yandex.com/en-ru/marketplace/products/yc/ubuntu-18-04-lts
+            "disk_boot_size" = "30"
+            "platform_id" = "standard-v3"
+
+            "ansible_user" = ""
+        }
+web_param = {
+            "web_port" = "80"
+            "web_secure_port" = "443"
+        }
+aws_access_token =""
+aws_secret_key   =""
+rebrain_dns_zone =""
+dns_name = ""
+enable_ssl = false

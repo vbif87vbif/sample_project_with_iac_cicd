@@ -1,0 +1,2 @@
+source_distr_path: /usr/local/bin/grafana/grafana-enterprise_9.3.6_amd64.deb
+dest_distr_path: /tmp/grafana-enterprise_9.3.6_amd64.deb

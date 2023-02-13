@@ -1,0 +1,15 @@
+---
+nginx_version: 1.23.3-1~bionic
+
+users_groups: []
+users_users:
+  - name: cicd
+    comment: CICI User
+    groups: ['sudo']
+    ssh_keys:
+      - key: "{{ pub_ssh_key_cicd }}"
+  - name: app
+    comment: App User
+    groups: ['sudo']
+    ssh_keys:
+      - key: "{{ pub_ssh_key_app }}"

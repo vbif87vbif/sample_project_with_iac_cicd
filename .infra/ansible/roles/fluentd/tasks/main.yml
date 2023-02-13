@@ -1,0 +1,63 @@
+---  
+- name: add APT signing key for td-agent
+  apt_key:
+    url: "https://packages.treasuredata.com/GPG-KEY-td-agent"
+    state: present
+
+- name: add td-agent repository
+  apt_repository:
+    repo: "deb https://packages.treasuredata.com/3/{{ ansible_distribution|lower }}/{{ ansible_distribution_release|lower }}/ {{ ansible_distribution_release|lower }} contrib"
+    state: present
+    update_cache: true
+
+# create td-agent root directory
+- name: Create td-agent configuration directory
+  become: true
+  file:
+    path: /etc/td-agent/
+    state: directory
+    mode: 0755
+
+- name: install td-agent
+  apt: name="td-agent={{ tdagent_version }}"  update_cache=yes  state=present force=yes
+  when: tdagent_version is defined
+
+# copy td-agent configuration
+- name: Copy configuration
+  template:
+    src: ./templates/etc/td-agent/td-agent.conf.j2
+    dest: /etc/td-agent/td-agent.conf
+
+# copy systemd service template
+- name: Copy configuration
+  template:
+    src: ./templates/lib/systemd/system/td-agent.service.j2
+    dest: /lib/systemd/system/td-agent.service
+
+- name: change limits.conf
+  lineinfile:
+    path: /etc/security/limits.conf
+    line: "{{ item }}"
+  with_items:
+    - "root soft nofile 65536"
+    - "root hard nofile 65536"
+    - "* soft nofile 65536"
+    - "* hard nofile 65536"
+
+- name: Add fluentd user to elasticsearch
+  uri:
+    url: http://localhost:9200/_security/user/fluentd
+    user: elastic
+    password: "{{ vault_elasticsearch_password }}"
+    method: POST
+    body: "{{ lookup('template','fluentd.role.j2') }}"
+    body_format: json
+    force_basic_auth: yes
+    status_code: 200
+
+# restart td-agent service
+- name: Restart td-agent
+  systemd:
+    state: restarted
+    daemon_reload: yes
+    name: td-agent

@@ -1,0 +1,19 @@
+---
+- name: "Read Checksum"
+  shell: curl https://getcomposer.org/download/latest-stable/composer.phar.sha256
+  register: composer_checksum
+
+- name: "Download PHAR file"
+  get_url:
+    url: https://getcomposer.org/download/latest-stable/composer.phar
+    dest: /usr/local/bin/composer
+    force: yes
+    checksum: "sha256:{{ composer_checksum.stdout }}"
+    mode: '0755'
+
+- name: "Read composer version"
+  shell: composer -V
+  register: composer_version
+
+- debug:
+    var: composer_version.stdout

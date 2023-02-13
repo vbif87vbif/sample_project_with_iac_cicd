@@ -1,0 +1,5 @@
+---
+pg_version: 13
+database_name: octoberdb
+database_user: octoberadmin
+database_password: "{{ vault_database_password }}"

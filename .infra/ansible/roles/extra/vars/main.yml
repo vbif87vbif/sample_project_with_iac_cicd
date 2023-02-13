@@ -1,0 +1,4 @@
+---
+octobercms_root_path: /opt/myoctober
+octobercms_composer_project_path:  /opt/myoctober/october
+octobercms_link_log_folder: /var/log/octobercms 

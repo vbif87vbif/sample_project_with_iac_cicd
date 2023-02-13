@@ -1,0 +1,9 @@
+nginx_user: www-data
+worker_processes: auto
+worker_connections: 767
+hostip: "{{(groups['webservers'] | map('extract', hostvars) | map(attribute='ansible_host') | list)[0]}}"
+hostname: "{{groups['webservers'][0]}}"
+vhs:
+  vhs1:
+    port: "{{(groups['webservers'] | map('extract', hostvars) | map(attribute='port') | list)[0]}}"
+    secure_port: "{{(groups['webservers'] | map('extract', hostvars) | map(attribute='secure_port') | list)[0]}}"

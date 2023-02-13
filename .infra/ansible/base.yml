@@ -1,0 +1,21 @@
+---
+- hosts: webservers
+  become: true
+  become_user: root
+  become_method: sudo
+  roles:
+    - users
+    - elasticsearch
+    - kibana
+    - fluentd
+    - web
+    - postgres
+    - php
+    - composer
+    - extra
+    - node-exporter
+    - prometheus
+    - grafana
+  vars_files:
+    - "group_vars/main.yml"
+    - "vaults/vault.yml"

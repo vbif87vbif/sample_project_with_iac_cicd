@@ -1,0 +1,137 @@
+# This file is a template, and might need editing before it works on your project.
+# You can copy and paste this template into a new `.gitlab-ci.yml` file.
+# You should not add this template to an existing `.gitlab-ci.yml` file by using the `include:` keyword.
+#
+# To contribute improvements to CI/CD templates, please follow the Development guide at:
+# https://docs.gitlab.com/ee/development/cicd/templates.html
+# This specific template is located at:
+# https://gitlab.com/gitlab-org/gitlab/-/blob/master/lib/gitlab/ci/templates/Go.gitlab-ci.yml
+# add additional comments +++++++++++
+
+
+stages:
+  - infra_install
+  - init
+  - publish
+  - deploy_prod
+  - phplinter
+  - infra_uninstall
+
+infra_install:
+  stage: infra_install
+  tags:
+    - my_ubuntu1804_shell_runner
+  cache:
+    key: $CI_COMMIT_REF_SLUG
+    paths:
+      - .infra/terraform/.terraform
+  before_script:
+    - terraform -chdir=".infra/terraform" init
+    - cp -f ~/terraform/terraform.tfvars .infra/terraform;
+  script:
+    - cd ~
+    - |
+      if test -f "host_ip"; then
+        hostip=$(<host_ip);
+        echo $hostip;
+        cd -;
+
+        if nc -w 10 -z $hostip 22 2>/dev/null; then
+          echo "Server is UP";
+        else
+          terraform -chdir=".infra/terraform" apply -var "dns_name=${DNS_NAME}"  -var "enable_ssl=${ENABLE_SSL}"  --auto-approve;
+        fi
+      else
+        cd -;
+        terraform -chdir=".infra/terraform" apply -var "dns_name=${DNS_NAME}"  -var "enable_ssl=${ENABLE_SSL}"  --auto-approve;
+      fi;
+  after_script:
+    - cp -fr .infra/terraform/* ~/terraform
+
+  rules:
+    - if: '$INFRA_UNINSTALL != "true"'
+      when: always
+    - when: never
+
+init:
+  stage: init
+  tags:
+    - my_ubuntu1804_shell_runner
+  script:
+      - ls -la .
+      - pwd
+      - tar -czvf october.tar.gz october/modules/system/views
+  artifacts:
+    paths:
+      - october.tar.gz
+  rules:
+    - if: '$INFRA_UNINSTALL != "true"'
+      when: always
+    - when: never
+
+publish:
+  stage: publish
+  tags:
+    - my_ubuntu1804_shell_runner
+  image: curlimages/curl:latest
+  script:
+    - 'curl --header "JOB-TOKEN: $CI_JOB_TOKEN" --upload-file october.tar.gz "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/october_project/${CI_PIPELINE_IID}_${CI_COMMIT_SHORT_SHA}/october.tar.gz"'
+  rules:
+    - if: '$INFRA_UNINSTALL != "true"'
+      when: always
+    - when: never
+
+deploy_prod:
+  stage: deploy_prod
+  tags:
+    - my_ubuntu1804_shell_runner
+  environment: production
+  before_script:
+    - 'command -v ssh-agent >/dev/null || ( apk add --update openssh )' 
+    - eval $(ssh-agent -s)
+    - cat ~/.ssh/cicd_priv_key.pem | tr -d '\r' | ssh-add - > /dev/null
+    - ssh-keyscan $(cat ~/host_ip) >> ~/.ssh/known_hosts
+    - chmod 644 ~/.ssh/known_hosts
+  script:
+    - ssh -T "${SSH_USER}@$(cat ~/host_ip)" "cd /home/${SSH_USER} && " \
+      "mkdir -p ~/releases && cd ~/releases && " \
+      "mkdir -p ~/releases/${CI_PIPELINE_IID}_${CI_COMMIT_SHORT_SHA} && cd ~/releases/${CI_PIPELINE_IID}_${CI_COMMIT_SHORT_SHA} && " \
+      "wget --header=\"JOB-TOKEN:${CI_JOB_TOKEN}\" ${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/october_project/${CI_PIPELINE_IID}_${CI_COMMIT_SHORT_SHA}/october.tar.gz && " \
+      "tar -zxvf october.tar.gz && " \
+      "ls -la && " \
+      "sudo cp -fr october/modules/system/views/placeholder.php /opt/myoctober/october/modules/system/views/"
+  rules:
+    - if: '$INFRA_UNINSTALL != "true" &&  $CI_COMMIT_BRANCH == "master"'
+      when: always
+    - when: never
+
+phplinter:
+  stage: phplinter
+  tags:
+    - my_ubuntu1804_shell_runner
+  image: registry.gitlab.com/pipeline-components/php-linter:latest
+  script:
+    - parallel-lint --colors .
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+
+infra_uninstall:
+  stage: infra_uninstall
+  tags:
+    - my_ubuntu1804_shell_runner
+  cache:
+    key: $CI_COMMIT_REF_SLUG
+    paths:
+      - .infra/terraform/.terraform
+  before_script:
+    - terraform -chdir=".infra/terraform" init
+    - cp -fr ~/terraform/* .infra/terraform;
+  script:
+    - cp ~/08-final-project/.infra/terraform/terraform.tfvars ./.infra/terraform;
+    - terraform -chdir=".infra/terraform" destroy -var "dns_name=${DNS_NAME}"  -var "enable_ssl=${ENABLE_SSL}"  --auto-approve;
+  after_script: 
+    - cp -fr .infra/terraform/* ~/terraform
+  rules:
+    - if: '$INFRA_UNINSTALL == "true"'
+      when: always
+    - when: never

@@ -1,0 +1,12 @@
+*.backup
+*.tfvars
+*.info
+*.hcl
+*.retry
+.terraform
+.terraformrc
+inventory.yml
+terraform.tfstate.backup
+terraform.tfstate
+meta.yml
+.vscode

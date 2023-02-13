@@ -1,0 +1,62 @@
+---
+- name: Check if October is already installed
+  stat:
+    path: "{{ octobercms_composer_project_path }}/index.php"
+  register: octobercms_site
+
+- name: Ensure October composer project path exists
+  file:
+    path: "{{ octobercms_root_path }}"
+    state: directory
+  when: not octobercms_site.stat.exists | bool
+
+- name: Run composer
+  shell:
+    cmd: "COMPOSER_ALLOW_SUPERUSER=1 composer create-project october/october"
+    chdir: "{{ octobercms_root_path }}"
+  when: not octobercms_site.stat.exists | bool
+
+- name: Run composer
+  shell:
+    cmd: "chown -R www-data:www-data {{ octobercms_composer_project_path }}"
+  when: not octobercms_site.stat.exists | bool
+
+- name: create symlink for web
+  file: 
+    path: "/var/www/vm-app-1/vhs1/october"
+    src: "{{ octobercms_composer_project_path }}"
+    state: link 
+    force: yes
+  when: not octobercms_site.stat.exists | bool
+
+- name: create symlink for log
+  file: 
+    path: "{{ octobercms_link_log_folder }}"
+    src: "{{ octobercms_composer_project_path }}/storage/logs/"
+    state: link 
+    mode: "u=rw,g=r,o=r"
+    force: yes
+  when: not octobercms_site.stat.exists | bool
+
+- name: run failure test for log 1
+  command: php artisan october:build
+  ignore_errors: true
+  args:
+    chdir: "{{ octobercms_composer_project_path }}"
+  when: not octobercms_site.stat.exists | bool
+
+- name: run failure test for log 2
+  command: php artisan october:build
+  ignore_errors: true
+  args:
+    chdir: "{{ octobercms_composer_project_path }}"
+  when: not octobercms_site.stat.exists | bool
+
+- name: Make my directory tree readable
+  file:
+    path: /va/log/nginx
+    mode: u=rwX,g=rX,o=rX
+    recurse: yes
+
+  # /opt/myoctober/october/storage/logs/system.log
+  # /opt/myoctober/october/modules/system/views/placeholder.php

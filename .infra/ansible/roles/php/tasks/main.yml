@@ -1,0 +1,40 @@
+---
+- name: Installation install software-properties-common
+  apt: name=software-properties-common
+
+- name: "Repo PHP 8.1"
+  apt_repository:
+    repo="ppa:ondrej/php"
+
+- name: "Updating the repo"
+  apt: update_cache=yes
+
+- name: Installation PHP 8.1
+  apt: name=php8.1 state=present
+
+- name: install lamp stack
+  apt:
+    pkg:
+      - php8.1-curl
+      - php8.1-mbstring
+      - php8.1-zip
+      - php8.1-gd
+      - php8.1-xml
+      - php8.1-mysql
+      - php8.1-fpm
+      - php8.1-pgsql 
+    state: present
+    update_cache: yes 
+
+- name: apache2 stop service
+  service:
+    service: apache2
+    state: stopped
+
+- name: disable apache2
+  systemd:
+    name: apache2
+    enabled: false
+
+- name: Starting and enabling php8.1-fpm
+  service: name=php8.1-fpm state=started enabled=yes

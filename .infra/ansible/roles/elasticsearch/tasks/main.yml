@@ -1,0 +1,62 @@
+---
+- name: Add elastic apt repository
+  apt_repository:
+    repo: "deb [trusted=yes] {{ elastic_repo_url }} stable main"
+    state: present
+    update_cache: yes
+
+- name: Install elasticsearch
+  apt:
+    name: "elasticsearch"
+    state: present
+    force: true
+    update_cache: yes
+
+- name: Ensure elasticsearch is enabled running
+  service:
+    name: elasticsearch
+    daemon_reload: yes
+    enabled: yes
+    state: started
+
+- name: Configure jvm.option
+  template:
+    src: ./templates/etc/elasticsearch/jvm.options.j2
+    dest: "/etc/elasticsearch/jvm.options"
+    owner: elasticsearch
+
+- name: Configure elasticsearch.yml
+  template:
+    src: ./templates/etc/elasticsearch/elasticsearch.yml.j2
+    dest: "/etc/elasticsearch/elasticsearch.yml"
+    owner: elasticsearch
+
+- name: "Start systemd service to lunch elasticsearch"
+  systemd:
+    daemon-reload: true
+    state: started
+    enabled: yes
+    name: elasticsearch
+
+- name: restart elasticsearch
+  service: name=elasticsearch state=restarted
+
+- name: "Reset elasticsearch passwd"
+  shell:
+    cmd: /bin/bash -c "/usr/share/elasticsearch/bin/elasticsearch-reset-password -b -u elastic"
+  register: reset_cmd
+
+- name: change password for elastic
+  uri:
+    url: http://localhost:9200/_security/user/elastic/_password
+    user: elastic
+    password: "{{ elk_password }}"
+    method: POST
+    body: "{{ lookup('template','newpassword.j2') }}"
+    body_format: json
+    force_basic_auth: yes
+    status_code: 200
+  vars:
+    elk_password: "{{ reset_cmd.stdout_lines[-1]
+      | regex_replace('^New value: (.*)$', '\\1') }}"
+  

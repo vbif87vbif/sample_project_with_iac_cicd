@@ -1,0 +1,20 @@
+<source>
+      @type tail
+      path /var/log/nginx/vm-app-1-vhs1-access.log
+      pos_file /var/log/td-agent/buffer/vm-app-1-vhs1-access.log.pos
+      tag nginx.access
+      <parse>
+        @type 'json'
+        time_format %Y-%m-%dT%H:%M:%S.%N%:z
+      </parse>
+</source>
+
+<match nginx.access>
+      @type elasticsearch
+      host localhost
+      port 9200
+      user fluentd
+      password {{ vault_fluentd_password }}
+      index_name nginx_access
+      flush_interval 5s
+</match>

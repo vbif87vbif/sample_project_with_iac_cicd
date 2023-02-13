@@ -1,0 +1,4 @@
+domain_name: "{{virtual_domain}}"
+letsencrypt_email: vbif87@mail.ru
+letsencrypt_staging: no
+certbot_force_update: false
